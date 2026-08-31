@@ -3,9 +3,7 @@ packages <- c("survival", "survminer", "dplyr", "ggplot2", "readr", "readxl", "c
 for (pkg in packages) {
   if (!require(pkg, character.only = TRUE)) {
     install.packages(pkg, dependencies = TRUE)
-    library(pkg, character.only = TRUE)
-  }
-}
+    library(pkg, character.only = TRUE)}}
 
 
 # Settings
@@ -54,8 +52,7 @@ if ("Patients" %in% sheet_names) {
 } else if ("Patient" %in% sheet_names) {
   patient_sheet <- "Patient"
 } else {
-  stop("Neither 'Patients' nor 'Patient' sheet was found.")
-}
+  stop("Neither 'Patients' nor 'Patient' sheet was found.")}
 
 patients <- read_excel(syng_metadata, sheet = patient_sheet) %>%
   mutate(
@@ -73,8 +70,7 @@ patients <- read_excel(syng_metadata, sheet = patient_sheet) %>%
   distinct(patient_id, .keep_all = TRUE)
 
 if (anyDuplicated(patients$patient_id)) {
-  stop("Patients sheet contains duplicated patient IDs.")
-}
+  stop("Patients sheet contains duplicated patient IDs.")}
 
 cat("\nPatients:", nrow(patients))
 cat("\nKnown OS duration:", sum(!is.na(patients$last_FU_OS_days)))
@@ -86,13 +82,11 @@ cat("\nKnown OS event:", sum(!is.na(patients$OS_EVENT)), "\n")
 format_p <- function(p) {
   if (p < 0.0001) return("< 0.0001")
   if (p < 0.001) return(formatC(p, format = "e", digits = 2))
-  sprintf("%.3f", p)
-}
+  sprintf("%.3f", p)}
 
 format_median <- function(row) {
   if (nrow(row) == 0 || is.na(row$median)) return("NR")
-  sprintf("%.1f\n(%.1f-%.1f)", row$median, row$lower, row$upper)
-}
+  sprintf("%.1f\n(%.1f-%.1f)", row$median, row$lower, row$upper)}
 
 
 # OS analysis
@@ -106,12 +100,10 @@ run_os_analysis <- function(config) {
     filter(.data[[config$status_col]] %in% c(config$negative_value, config$positive_value))
   
   if ("cohort" %in% names(signature_data) && any(signature_data$cohort != "Synergy")) {
-    stop(paste0(config$name, ": file contains patients outside Synergy."))
-  }
+    stop(paste0(config$name, ": file contains patients outside Synergy."))}
   
   if (anyDuplicated(signature_data$patient_id)) {
-    stop(paste0(config$name, ": patient-level file contains duplicated patients."))
-  }
+    stop(paste0(config$name, ": patient-level file contains duplicated patients."))}
   
   cat("\n", config$name, "\n")
   print(table(signature_data[[config$status_col]]))
@@ -133,8 +125,7 @@ run_os_analysis <- function(config) {
   cat("\nPatients excluded:", sum(!df$OS_VALID), "\n")
   
   if (any(!df$OS_VALID)) {
-    print(df %>% filter(!OS_VALID) %>% select(patient_id, sampling_day, last_FU_OS_days, OS_EVENT))
-  }
+    print(df %>% filter(!OS_VALID) %>% select(patient_id, sampling_day, last_FU_OS_days, OS_EVENT))}
   
   
   # Final dataset
@@ -164,8 +155,7 @@ run_os_analysis <- function(config) {
         surv_event = ifelse(original_time <= X_AXIS_MAX, original_event, 0)
       )
   } else {
-    os_df <- os_df %>% mutate(surv_time = original_time, surv_event = original_event)
-  }
+    os_df <- os_df %>% mutate(surv_time = original_time, surv_event = original_event)}
   
   
   # Kaplan-Meier, log-rank and Cox
@@ -263,8 +253,7 @@ run_os_analysis <- function(config) {
     ) +
     scale_x_continuous(
       breaks = seq(0, X_AXIS_MAX, BREAK_TIME_BY),
-      limits = c(0, X_AXIS_MAX), expand = c(0.01, 0)
-    )
+      limits = c(0, X_AXIS_MAX), expand = c(0.01, 0))
   
   
   # Landmark lines
@@ -281,9 +270,7 @@ run_os_analysis <- function(config) {
       ) +
       geom_segment(
         aes(x = 0, xend = 24, y = s24_pos, yend = s24_pos),
-        linetype = "dashed", linewidth = 0.5, colour = "grey65"
-      )
-  }
+        linetype = "dashed", linewidth = 0.5, colour = "grey65")}
   
   if (!is.na(s36_neg) && !is.na(s36_pos)) {
     main_plot <- main_plot +
@@ -297,9 +284,7 @@ run_os_analysis <- function(config) {
       ) +
       geom_segment(
         aes(x = 0, xend = 36, y = s36_pos, yend = s36_pos),
-        linetype = "dashed", linewidth = 0.5, colour = "grey65"
-      )
-  }
+        linetype = "dashed", linewidth = 0.5, colour = "grey65")}
   
   
   # Censoring legend
@@ -333,8 +318,7 @@ run_os_analysis <- function(config) {
       legend.key.width = grid::unit(1.2, "cm"),
       legend.text = element_text(size = 14),
       panel.grid = element_blank(),
-      plot.margin = margin(5, 5, 5, 5)
-    )
+      plot.margin = margin(5, 5, 5, 5))
   
   
   # Risk table
@@ -355,8 +339,7 @@ run_os_analysis <- function(config) {
       axis.line.y = element_blank(),
       panel.grid = element_blank(),
       legend.position = "none",
-      plot.margin = margin(0, 5, 2, 5)
-    )
+      plot.margin = margin(0, 5, 2, 5))
   
   
   # Statistics inset
@@ -382,13 +365,11 @@ run_os_analysis <- function(config) {
     annotation_custom(
       grob = ggplotGrob(inset_table),
       xmin = config$inset_xmin, xmax = config$inset_xmax,
-      ymin = 0.66, ymax = 0.98
-    )
+      ymin = 0.66, ymax = 0.98)
   
   final_plot <- cowplot::plot_grid(
     main_plot, risk_table,
-    ncol = 1, rel_heights = c(4.3, 0.85), align = "v", axis = "lr"
-  )
+    ncol = 1, rel_heights = c(4.3, 0.85), align = "v", axis = "lr")
   
   print(final_plot)
   
@@ -397,8 +378,7 @@ run_os_analysis <- function(config) {
   
   ggsave(
     file.path(config$output_dir, paste0("KM_OS_", config$prefix, "_from_sample.png")),
-    plot = final_plot, width = 12.5, height = 8.2, dpi = 300, bg = "white"
-  )
+    plot = final_plot, width = 12.5, height = 8.2, dpi = 300, bg = "white")
   
   
   # Save results
@@ -409,13 +389,11 @@ run_os_analysis <- function(config) {
   
   logrank_result <- data.frame(
     comparison = paste(config$negative_label, "vs", config$positive_label),
-    p_value = p_value, n_total = nrow(os_df), n_negative = n_neg, n_positive = n_pos
-  )
+    p_value = p_value, n_total = nrow(os_df), n_negative = n_neg, n_positive = n_pos)
   
   cox_result <- data.frame(
     comparison = paste(config$positive_label, "vs", config$negative_label),
-    hazard_ratio = hr, CI_lower_95 = hr_low, CI_upper_95 = hr_up, p_value = cox_p
-  )
+    hazard_ratio = hr, CI_lower_95 = hr_low, CI_upper_95 = hr_up, p_value = cox_p)
   
   ph_result <- as.data.frame(ph_test$table)
   ph_result$term <- rownames(ph_result)
@@ -432,12 +410,10 @@ run_os_analysis <- function(config) {
   print(group_summary)
   cat("\nLog-rank p-value:", p_value, "\n")
   cat("\nCox result:\n")
-  print(cox_result)
-}
+  print(cox_result)}
 
 
 # Run analyses
 
 for (config in analyses) {
-  run_os_analysis(config)
-}
+  run_os_analysis(config)}

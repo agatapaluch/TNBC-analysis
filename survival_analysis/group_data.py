@@ -95,8 +95,7 @@ def collapse_to_patient_level(all_samples, status_col, output_label):
     patient_level = (
         known.sort_values(["patient_id", "sampling_day", "sample_id"])
         .drop_duplicates("patient_id", keep="last")
-        .reset_index(drop=True)
-    )
+        .reset_index(drop=True))
 
     print("Latest-sample status:")
     print(patient_level[status_col].value_counts())
@@ -121,22 +120,19 @@ metadata = metadata.drop_duplicates("sample_id", keep="first")
 all_samples = sbs.merge(metadata, on="sample_id", how="left", validate="one_to_one")
 
 missing_metadata = all_samples[
-    all_samples["patient_id"].isna() | all_samples["sampling_day"].isna()
-].copy()
+    all_samples["patient_id"].isna() | all_samples["sampling_day"].isna()].copy()
 
 if not missing_metadata.empty:
     print("\nSamples excluded because of missing metadata:")
     print(missing_metadata[["sample_id", "SBS3", "SBS6", "SBS15", "SBS44"]].to_string(index=False))
 
 all_samples = all_samples[
-    all_samples["patient_id"].notna() & all_samples["sampling_day"].notna()
-].copy()
+    all_samples["patient_id"].notna() & all_samples["sampling_day"].notna()].copy()
 
 all_samples["cohort"] = "Synergy"
 
 print("\nSynergy SBS samples with metadata:", len(all_samples))
 print("Synergy patients with SBS data:", all_samples["patient_id"].nunique())
-
 
 # SBS3
 
@@ -146,8 +142,7 @@ sbs3_samples["SBS3_status"] = "SBS3 negative"
 sbs3_samples.loc[sbs3_samples["SBS3"] > SBS3_THRESHOLD, "SBS3_status"] = "SBS3 positive"
 
 sbs3_patient_level = collapse_to_patient_level(
-    sbs3_samples, status_col="SBS3_status", output_label="SBS3"
-)
+    sbs3_samples, status_col="SBS3_status", output_label="SBS3")
 
 sbs3_samples.to_csv(SBS3_ALL_SAMPLES, index=False)
 sbs3_patient_level.to_csv(SBS3_PATIENT_LEVEL, index=False)
@@ -162,8 +157,7 @@ print(sbs3_patient_level["SBS3_status"].value_counts())
 # SBS3 + ID6
 
 hrd_samples = all_samples[
-    ["cohort", "patient_id", "sample_id", "sampling_day", "SBS3"]
-].merge(ids, on="sample_id", how="left", validate="one_to_one")
+    ["cohort", "patient_id", "sample_id", "sampling_day", "SBS3"]].merge(ids, on="sample_id", how="left", validate="one_to_one")
 
 hrd_samples["ID6_available"] = hrd_samples["ID6"].notna()
 
@@ -173,17 +167,13 @@ id6_positive = hrd_samples["ID6"].fillna(0) > 0
 hrd_samples["HRD_status"] = "HRD unknown"
 hrd_samples.loc[sbs3_positive | id6_positive, "HRD_status"] = "HRD positive"
 hrd_samples.loc[
-    (~sbs3_positive) & hrd_samples["ID6_available"] & (~id6_positive),
-    "HRD_status"
-] = "HRD negative"
+    (~sbs3_positive) & hrd_samples["ID6_available"] & (~id6_positive), "HRD_status"] = "HRD negative"
 
 hrd_samples["HRD_marker"] = hrd_samples.apply(
-    lambda row: get_marker(row.fillna(0), ["SBS3", "ID6"]), axis=1
-)
+    lambda row: get_marker(row.fillna(0), ["SBS3", "ID6"]), axis=1)
 
 hrd_patient_level = collapse_to_patient_level(
-    hrd_samples, status_col="HRD_status", output_label="SBS3/ID6"
-)
+    hrd_samples, status_col="HRD_status", output_label="SBS3/ID6")
 
 hrd_samples.to_csv(HRD_ALL_SAMPLES, index=False)
 hrd_patient_level.to_csv(HRD_PATIENT_LEVEL, index=False)
@@ -195,36 +185,27 @@ print("\nSBS3/ID6 status - patient level, latest evaluable sample:")
 print(hrd_patient_level["HRD_status"].value_counts())
 
 print("\nMarkers among SBS3/ID6-positive patients:")
-print(
-    hrd_patient_level.loc[
-        hrd_patient_level["HRD_status"] == "HRD positive",
-        "HRD_marker"
-    ].value_counts()
-)
+print(hrd_patient_level.loc[hrd_patient_level["HRD_status"] == "HRD positive", "HRD_marker"].value_counts())
 
 
 # SBS6 + SBS15 + SBS44
 
 mmr_samples = all_samples[
-    ["cohort", "patient_id", "sample_id", "sampling_day", "SBS6", "SBS15", "SBS44"]
-].copy()
+    ["cohort", "patient_id", "sample_id", "sampling_day", "SBS6", "SBS15", "SBS44"]].copy()
 
 mmr_positive = (
     (mmr_samples["SBS6"] > 0) |
     (mmr_samples["SBS15"] > 0) |
-    (mmr_samples["SBS44"] > 0)
-)
+    (mmr_samples["SBS44"] > 0))
 
 mmr_samples["MMR_status"] = "SBS6/15/44 negative"
 mmr_samples.loc[mmr_positive, "MMR_status"] = "SBS6/15/44 positive"
 
 mmr_samples["MMR_marker"] = mmr_samples.apply(
-    lambda row: get_marker(row, ["SBS6", "SBS15", "SBS44"]), axis=1
-)
+    lambda row: get_marker(row, ["SBS6", "SBS15", "SBS44"]), axis=1)
 
 mmr_patient_level = collapse_to_patient_level(
-    mmr_samples, status_col="MMR_status", output_label="SBS6/15/44"
-)
+    mmr_samples, status_col="MMR_status", output_label="SBS6/15/44")
 
 mmr_samples.to_csv(MMR_ALL_SAMPLES, index=False)
 mmr_patient_level.to_csv(MMR_PATIENT_LEVEL, index=False)
@@ -236,13 +217,7 @@ print("\nSBS6/15/44 status - patient level, latest sample:")
 print(mmr_patient_level["MMR_status"].value_counts())
 
 print("\nMarkers among SBS6/15/44-positive patients:")
-print(
-    mmr_patient_level.loc[
-        mmr_patient_level["MMR_status"] == "SBS6/15/44 positive",
-        "MMR_marker"
-    ].value_counts()
-)
-
+print(mmr_patient_level.loc[mmr_patient_level["MMR_status"] == "SBS6/15/44 positive", "MMR_marker"].value_counts())
 
 # Output
 

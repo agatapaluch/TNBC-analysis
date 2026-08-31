@@ -3,9 +3,7 @@ packages <- c("survival", "survminer", "dplyr", "ggplot2", "readr", "readxl", "c
 for (pkg in packages) {
   if (!require(pkg, character.only = TRUE)) {
     install.packages(pkg, dependencies = TRUE)
-    library(pkg, character.only = TRUE)
-  }
-}
+    library(pkg, character.only = TRUE)}}
 
 
 # Settings
@@ -43,9 +41,7 @@ analyses <- list(
     negative_label = "SBS6/15/44 negative", positive_label = "SBS6/15/44 positive",
     output_dir = "SBS6_15_44/SBS6_15_44_OS_results", prefix = "SBS6_SBS15_SBS44",
     inset_xmin = 33, inset_xmax = 74, inset_ymin = 0.70, inset_ymax = 0.995,
-    legend_y = 0.025, legend_x = 0.01
-  )
-)
+    legend_y = 0.025, legend_x = 0.01))
 
 
 # Survival data
@@ -66,8 +62,7 @@ patients <- read_excel(syng_metadata, sheet = "Patients") %>%
   select(patient_id, last_FU_OS_days, OS_MONTHS, OS_EVENT)
 
 if (anyDuplicated(patients$patient_id)) {
-  stop("Patients sheet contains duplicated patient IDs.")
-}
+  stop("Patients sheet contains duplicated patient IDs.")}
 
 cat("\nPatients:", nrow(patients))
 cat("\nKnown OS duration:", sum(!is.na(patients$OS_MONTHS)))
@@ -79,13 +74,11 @@ cat("\nKnown OS event:", sum(!is.na(patients$OS_EVENT)), "\n")
 format_p <- function(p) {
   if (p < 0.0001) return("< 0.0001")
   if (p < 0.001) return(formatC(p, format = "e", digits = 2))
-  sprintf("%.3f", p)
-}
+  sprintf("%.3f", p)}
 
 format_median <- function(row) {
   if (nrow(row) == 0 || is.na(row$median)) return("NR")
-  sprintf("%.1f\n(%.1f-%.1f)", row$median, row$lower, row$upper)
-}
+  sprintf("%.1f\n(%.1f-%.1f)", row$median, row$lower, row$upper)}
 
 
 # OS analysis
@@ -101,12 +94,10 @@ run_os_analysis <- function(config) {
     filter(.data[[config$status_col]] %in% c(config$negative_value, config$positive_value))
   
   if ("cohort" %in% names(signature_data) && any(signature_data$cohort != "Synergy")) {
-    stop(paste0(config$name, ": patient-level file contains patients outside Synergy."))
-  }
+    stop(paste0(config$name, ": patient-level file contains patients outside Synergy."))}
   
   if (anyDuplicated(signature_data$patient_id)) {
-    stop(paste0(config$name, ": patient-level file contains duplicated patients."))
-  }
+    stop(paste0(config$name, ": patient-level file contains duplicated patients."))}
   
   cat("\nGroups before adding survival data:\n")
   print(table(signature_data[[config$status_col]]))
@@ -123,8 +114,7 @@ run_os_analysis <- function(config) {
   cat("\nPatients excluded:", sum(!df$OS_VALID), "\n")
   
   if (any(!df$OS_VALID)) {
-    print(df %>% filter(!OS_VALID) %>% select(patient_id, last_FU_OS_days, OS_MONTHS, OS_EVENT))
-  }
+    print(df %>% filter(!OS_VALID) %>% select(patient_id, last_FU_OS_days, OS_MONTHS, OS_EVENT))}
   
   
   # Final dataset
@@ -135,8 +125,7 @@ run_os_analysis <- function(config) {
       GROUP = factor(.data[[config$status_col]], levels = c(config$negative_value, config$positive_value)),
       KM_GROUP = GROUP,
       original_time = OS_MONTHS,
-      original_event = as.integer(OS_EVENT)
-    )
+      original_event = as.integer(OS_EVENT))
   
   cat("\nFinal groups:\n")
   print(table(os_df$GROUP))
@@ -155,8 +144,7 @@ run_os_analysis <- function(config) {
       )
   } else {
     os_df <- os_df %>%
-      mutate(surv_time = original_time, surv_event = original_event)
-  }
+      mutate(surv_time = original_time, surv_event = original_event)}
   
   
   # Kaplan-Meier, log-rank and Cox
@@ -208,14 +196,12 @@ run_os_analysis <- function(config) {
   landmark_df <- data.frame(
     strata = sub("^KM_GROUP=", "", landmark_sum$strata),
     time = landmark_sum$time,
-    surv = landmark_sum$surv
-  )
+    surv = landmark_sum$surv)
   
   get_surv <- function(group, time_point) {
     value <- landmark_df$surv[landmark_df$strata == group & landmark_df$time == time_point]
     if (length(value) == 0) return(NA_real_)
-    value[1]
-  }
+    value[1]}
   
   s24_neg <- get_surv(config$negative_value, 24)
   s24_pos <- get_surv(config$positive_value, 24)
@@ -250,8 +236,7 @@ run_os_analysis <- function(config) {
     risk.table.y.text.col = FALSE,
     risk.table.title = "Patients still at risk:",
     risk.table.fontsize = 5,
-    ggtheme = theme_classic(base_size = 14)
-  )
+    ggtheme = theme_classic(base_size = 14))
   
   main_plot <- km$plot +
     scale_y_continuous(
@@ -263,8 +248,7 @@ run_os_analysis <- function(config) {
     scale_x_continuous(
       breaks = seq(0, X_AXIS_MAX, BREAK_TIME_BY),
       limits = c(0, X_AXIS_MAX),
-      expand = c(0.01, 0)
-    )
+      expand = c(0.01, 0))
   
   
   # Landmark lines
@@ -281,9 +265,7 @@ run_os_analysis <- function(config) {
       ) +
       geom_segment(
         aes(x = 0, xend = 24, y = s24_pos, yend = s24_pos),
-        linetype = "dashed", linewidth = 0.5, colour = "grey65"
-      )
-  }
+        linetype = "dashed", linewidth = 0.5, colour = "grey65")}
   
   if (!is.na(s36_neg) && !is.na(s36_pos)) {
     main_plot <- main_plot +
@@ -297,9 +279,7 @@ run_os_analysis <- function(config) {
       ) +
       geom_segment(
         aes(x = 0, xend = 36, y = s36_pos, yend = s36_pos),
-        linetype = "dashed", linewidth = 0.5, colour = "grey65"
-      )
-  }
+        linetype = "dashed", linewidth = 0.5, colour = "grey65")}
   
   
   # Censoring legend
@@ -334,8 +314,7 @@ run_os_analysis <- function(config) {
       legend.key.width = grid::unit(1.2, "cm"),
       legend.text = element_text(size = 14),
       panel.grid = element_blank(),
-      plot.margin = margin(5, 5, 5, 5)
-    )
+      plot.margin = margin(5, 5, 5, 5))
   
   
   # Risk table
@@ -357,8 +336,7 @@ run_os_analysis <- function(config) {
       axis.line.y = element_blank(),
       panel.grid = element_blank(),
       legend.position = "none",
-      plot.margin = margin(0, 5, 2, 5)
-    )
+      plot.margin = margin(0, 5, 2, 5))
   
   
   # Statistics inset
@@ -384,13 +362,11 @@ run_os_analysis <- function(config) {
     annotation_custom(
       grob = ggplotGrob(inset_table),
       xmin = config$inset_xmin, xmax = config$inset_xmax,
-      ymin = config$inset_ymin, ymax = config$inset_ymax
-    )
+      ymin = config$inset_ymin, ymax = config$inset_ymax)
   
   final_plot <- cowplot::plot_grid(
     main_plot, risk_table,
-    ncol = 1, rel_heights = c(4.3, 0.85), align = "v", axis = "lr"
-  )
+    ncol = 1, rel_heights = c(4.3, 0.85), align = "v", axis = "lr")
   
   print(final_plot)
   
@@ -399,8 +375,7 @@ run_os_analysis <- function(config) {
   
   ggsave(
     file.path(config$output_dir, paste0("KM_OS_", config$prefix, ".png")),
-    plot = final_plot, width = 12.5, height = 8.2, dpi = 300, bg = "white"
-  )
+    plot = final_plot, width = 12.5, height = 8.2, dpi = 300, bg = "white")
   
   
   # Save results
@@ -411,13 +386,11 @@ run_os_analysis <- function(config) {
   
   logrank_result <- data.frame(
     comparison = paste(config$negative_label, "vs", config$positive_label),
-    p_value = p_value, n_total = nrow(os_df), n_negative = n_neg, n_positive = n_pos
-  )
+    p_value = p_value, n_total = nrow(os_df), n_negative = n_neg, n_positive = n_pos)
   
   cox_result <- data.frame(
     comparison = paste(config$positive_label, "vs", config$negative_label),
-    hazard_ratio = hr, CI_lower_95 = hr_low, CI_upper_95 = hr_up, p_value = cox_p
-  )
+    hazard_ratio = hr, CI_lower_95 = hr_low, CI_upper_95 = hr_up, p_value = cox_p)
   
   ph_result <- as.data.frame(ph_test$table)
   ph_result$term <- rownames(ph_result)
@@ -434,12 +407,10 @@ run_os_analysis <- function(config) {
   print(group_summary)
   cat("\nLog-rank p-value:", p_value, "\n")
   cat("\nCox result:\n")
-  print(cox_result)
-}
+  print(cox_result)}
 
 
 # Run analyses
 
 for (config in analyses) {
-  run_os_analysis(config)
-}
+  run_os_analysis(config)}
